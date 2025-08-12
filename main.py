@@ -6,10 +6,16 @@ Provides REST API endpoints for email processing, monitoring, and management.
 """
 from dotenv import load_dotenv
 load_dotenv()
+
+API_KEY = os.environ.get('ADMIN_API_KEY')  # Set this in Render Dashboard
+
 import os
 import logging
 from datetime import datetime
 from typing import Dict, Any
+
+from functools import wraps
+from flask import request, jsonify
 
 from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
@@ -30,6 +36,16 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+def require_key(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        expected = os.environ.get('ADMIN_API_KEY')
+        supplied = request.headers.get('X-Admin-Key')
+        if expected and supplied != expected:
+            return jsonify({"error": "Unauthorized"}), 401
+        return f(*args, **kwargs)
+    return wrapper
 
 # Global assistant instance
 gmail_assistant = None
@@ -252,7 +268,9 @@ def get_stats():
 
 
 @app.route('/api/process-emails', methods=['POST'])
+@require_key
 def process_emails():
+
     """Process recent emails through the AI pipeline"""
     try:
         if not gmail_assistant:
@@ -309,7 +327,9 @@ def process_emails():
 
 
 @app.route('/api/process-batch', methods=['POST'])
+@require_key
 def process_batch():
+
     """Advanced batch processing with full analytics"""
     try:
         if not gmail_assistant:
@@ -411,6 +431,12 @@ def test_connection():
             'message': str(e)
         }), 500
 
+from flask import send_from_directory
+
+@app.route('/admin', methods=['GET'])
+def admin_panel():
+    # Serve static admin.html from repo root
+    return send_from_directory('.', 'admin.html', mimetype='text/html')
 
 if __name__ == '__main__':
     try:
@@ -436,4 +462,5 @@ if __name__ == '__main__':
         logger.error(f"❌ Failed to start application: {str(e)}")
         print(f"Application startup failed: {str(e)}")
         exit(1)
+
         
