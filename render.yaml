@@ -1,0 +1,40 @@
+# render.yaml - Render Deployment Configuration
+# FIT Group Gmail Assistant
+
+services:
+  - type: web
+    name: fit-gmail-assistant
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT main:app --workers 2 --timeout 120 --keep-alive 5
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.6
+      - key: FLASK_ENV
+        value: production
+      - key: DEBUG
+        value: false
+      
+    # Environment variables (set these in Render dashboard)
+    # OPENAI_API_KEY - Your OpenAI API key
+    # GOOGLE_SERVICE_ACCOUNT_JSON - Google Service Account JSON (base64 encoded)
+    # GMAIL_USER_EMAIL - Gmail address to process (for service account delegation)
+    # NOTION_TOKEN - Notion integration token (optional)
+    # NOTION_DATABASE_ID - Notion database ID (optional)
+    
+    # Health check configuration
+    healthCheckPath: /api/health
+    
+    # Resource allocation
+    plan: starter  # or standard/pro based on needs
+    region: oregon # or your preferred region
+    
+    # Auto-deploy configuration
+    branch: main
+    buildFilter:
+      paths:
+        - main.py
+        - gmail_assistant.py
+        - requirements.txt
+        - render.yaml
+        
