@@ -365,10 +365,6 @@
                         <option value="standard">Standard Processing</option>
                         <option value="batch">Advanced Batch Mode</option>
                     </select>
-                    <label style="display:block; margin:10px 0 0;">
-                        <input type="checkbox" id="full-data"> Include full email content
-                    </label>
-
                 </div>
                 
                 <button class="btn btn-primary btn-full" onclick="processEmails()">
@@ -513,10 +509,8 @@
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-Admin-Key': 'YOUR_KEY_HERE'
+                        'Content-Type': 'application/json'
                     },
-
                     body: JSON.stringify({
                         days: days,
                         max_results: maxEmails,
