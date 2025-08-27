@@ -5,6 +5,16 @@
 
 set -e  # Exit on any error
 
+# Load environment variables from .env
+if [ -f .env ]; then
+    set -a
+    source .env
+    set +a
+    echo "✅ Loaded environment variables from .env"
+else
+    echo "⚠️  No .env file found"
+fi
+
 echo "🚀 FIT Group - Gmail Assistant Startup"
 echo "======================================"
 
