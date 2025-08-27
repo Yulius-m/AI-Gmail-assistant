@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from typing import Dict, Any
 
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, render_template
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 import traceback
@@ -124,6 +124,10 @@ def handle_processing_error(error):
 
 
 # API Routes
+@app.route('/admin', methods=['GET'])
+def admin_page():
+    return render_template('admin.html')
+
 @app.route('/', methods=['GET'])
 def home():
     """Home page with API documentation"""
