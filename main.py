@@ -7,9 +7,13 @@ Provides REST API endpoints for email processing, monitoring, and management.
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import json
 import logging
 from datetime import datetime
 from typing import Dict, Any
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
 
 from flask import Flask, request, jsonify, render_template_string, render_template
 from flask_cors import CORS
@@ -414,6 +418,39 @@ def test_connection():
             'error': 'Connection test failed',
             'message': str(e)
         }), 500
+
+
+@app.route("/api/test-refresh-token", methods=['GET'])
+def test_gmail_refresh():
+    try:
+        # 1) Read GOOGLE_OAUTH_TOKEN JSON from env
+        token_json = json.loads(os.getenv("GOOGLE_OAUTH_TOKEN"))
+
+        # 2) Build credentials with refresh_token
+        creds = Credentials(
+            token=None,  # force refresh
+            refresh_token=token_json["refresh_token"],
+            token_uri=token_json["token_uri"],
+            client_id=token_json["client_id"],
+            client_secret=token_json["client_secret"],
+            scopes=token_json["scopes"]
+        )
+
+        # 3) Refresh token (get new access token)
+        creds.refresh(Request())
+
+        # 4) Call Gmail API to verify
+        service = build("gmail", "v1", credentials=creds)
+        profile = service.users().getProfile(userId="me").execute()
+
+        return jsonify({
+            "status": "success",
+            "email": profile["emailAddress"],
+            "new_access_token": creds.token
+        })
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 if __name__ == '__main__':
